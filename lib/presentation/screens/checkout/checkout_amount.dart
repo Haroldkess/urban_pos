@@ -85,13 +85,13 @@ class _CheckOutAmountState extends State<CheckOutAmount> {
               UiProvider ui = Provider.of<UiProvider>(context, listen: false);
               ProductProvider product = Provider.of(context, listen: false);
               late double customerPaid;
-              if (cash.text.isEmpty && bank.text.isEmpty && pos.text.isEmpty) {
-                showToast("Add amount",
-                    context: context,
-                    backgroundColor: Colors.red[900],
-                    position: StyledToastPosition.top);
-                return;
-              }
+              // if (cash.text.isEmpty && bank.text.isEmpty && pos.text.isEmpty) {
+              //   showToast("Add amount",
+              //       context: context,
+              //       backgroundColor: Colors.red[900],
+              //       position: StyledToastPosition.top);
+              //   return;
+              // }
               if (ui.paymentMethod.isEmpty) {
                 showToast("Select payment method",
                     context: context,
@@ -100,15 +100,18 @@ class _CheckOutAmountState extends State<CheckOutAmount> {
 
                 return;
               }
-              customerPaid = 0;
+              customerPaid = 0.0;
               if (cash.text.isNotEmpty) {
-                customerPaid += double.tryParse(cash.text)!;
+                customerPaid +=
+                    double.tryParse(cash.text.isEmpty ? "0.0" : cash.text)!;
               }
               if (bank.text.isNotEmpty) {
-                customerPaid += double.tryParse(bank.text)!;
+                customerPaid +=
+                    double.tryParse(bank.text.isEmpty ? "0.0" : bank.text)!;
               }
               if (pos.text.isNotEmpty) {
-                customerPaid += double.tryParse(pos.text)!;
+                customerPaid +=
+                    double.tryParse(pos.text.isEmpty ? "0.0" : pos.text)!;
               }
               final amountPaid =
                   double.tryParse(cash.text.isEmpty ? "0.0" : cash.text)! +

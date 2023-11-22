@@ -3,8 +3,9 @@ import 'dart:developer';
 
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
-import 'package:salesapp/model/cart_model.dart';
+import 'package:salesapp/model/cart_model.dart' hide ShopProductWholesalePrice;
 import 'package:salesapp/presentation/functions/allNavigation.dart';
+import 'package:salesapp/services/api_url.dart';
 
 import '../../model/product_model.dart';
 import '../../presentation/uiproviders/ui_provider.dart';
@@ -20,40 +21,69 @@ class MyCart {
 }
 
 class CartController {
-  static Future addToCart(context, ProductDatum product) async {
+  static Future addToCart(
+      context,
+      bool isHome,
+      ProductDatum product,
+      DescriprionController controller,
+      int totQty,
+      totAmount,
+      int singleqTY) async {
+    final finalSingleQty = singleqTY;
     UiProvider ui = Provider.of<UiProvider>(context, listen: false);
     CartProvider cartProvider = Provider.of(context, listen: false);
     List<ProductDatum> cartInfo = cartProvider.cartProducts
         .where((element) => product.id == element.id)
         .toList();
-    MyCart cartData = MyCart(
-        note: ui.note,
-        sn: ui.sn,
-        qty: ui.qty,
-        amount: ui.amount.isEmpty ? ui.descAmount.toString() : ui.amount);
+    List<ShopProductWholesalePrice> wholePrices = [];
+    if (controller.sales.length > 1) {
+      for (var element in controller.sales) {
+        if (element.wholeSale!.id != 0 &&
+            element.wholeSale!.wholesaleQuantity! >= 1) {
+          wholePrices.add(ShopProductWholesalePrice(
+            id: element.wholeSale!.id,
+            name: element.wholeSale!.name,
+            price: element.amount,
+            wholesaleQuantity:
+                element.qty!.value ~/ element.wholeSale!.wholesaleQuantity!,
+            costPrice: element.wholeSale!.costPrice,
+            createdAt: DateTime.now(),
+          ));
+        }
+      }
+    }
 
+    MyCart cartData = MyCart(
+        note: ui.note, sn: ui.sn, qty: totQty, amount: totAmount.toString());
+    //   print(finalSingleQty);
     if (cartInfo.isEmpty) {
       ProductDatum incoming = product;
       ProductDatum prod = incoming.copyWith(
           qty: cartData.qty,
+          attributes: finalSingleQty,
           otherDetails: cartData.note,
           newPrice: cartData.amount!,
-          serialNo: cartData.sn!);
+          serialNo: cartData.sn!,
+          shopProductWholesalePrices:
+              controller.sales.length > 1 ? wholePrices : null);
 
       var fullCart = await cartProvider.putInCart(prod);
-    //  consoleLog(fullCart.toString());
+      //  consoleLog(fullCart.toString());
       await saveCartOffline(fullCart);
       PageRouting.popToPage(context);
     } else {
       ProductDatum incoming = product;
       ProductDatum prod = incoming.copyWith(
           qty: cartData.qty!,
+          attributes: finalSingleQty,
           otherDetails: cartData.note,
           newPrice: cartData.amount!,
-          serialNo: cartData.sn!);
+          serialNo: cartData.sn!,
+          shopProductWholesalePrices:
+              controller.sales.length > 1 ? wholePrices : null);
 
-      var fullCart = await cartProvider.replaceInCart(prod);
-    //  consoleLog(fullCart.toString());
+      var fullCart = await cartProvider.replaceInCart(prod, isHome);
+      //  consoleLog(fullCart.toString());
       await saveCartOffline(fullCart);
       PageRouting.popToPage(context);
     }
@@ -83,7 +113,7 @@ class CartController {
     }
     CartProvider cart = Provider.of(context, listen: false);
     var data = await Database.read(Database.cartKey);
-   // consoleLog(data.toString());
+    // consoleLog(data.toString());
     var decode = await jsonDecode(jsonEncode(data));
     var existingData = ProductModel.fromJson(decode);
     cart.initializeCart(existingData.data!);
@@ -91,7 +121,15 @@ class CartController {
 
   // draft
 
-  static Future addToDraftCart(context, ProductDatum product, String id) async {
+  static Future addToDraftCart(
+      context,
+      ProductDatum product,
+      String id,
+      DescriprionController controller,
+      int totQty,
+      totAmount,
+      int singleqTY) async {
+    final finalSingleQty = singleqTY;
     UiProvider ui = Provider.of<UiProvider>(context, listen: false);
     CartProvider cartProvider = Provider.of(context, listen: false);
     List<ProductDatum> cartInfo = cartProvider.draftList
@@ -102,34 +140,73 @@ class CartController {
         .where((element) => product.id == element.id)
         .toList();
 
+    List<ShopProductWholesalePrice> wholePrices = [];
+    if (controller.sales.length > 1) {
+      for (var element in controller.sales) {
+        if (element.wholeSale!.id != 0 &&
+            element.wholeSale!.wholesaleQuantity! >= 1) {
+          wholePrices.add(ShopProductWholesalePrice(
+            id: element.wholeSale!.id,
+            name: element.wholeSale!.name,
+            price: element.amount,
+            wholesaleQuantity:
+                element.qty!.value ~/ element.wholeSale!.wholesaleQuantity!,
+            costPrice: element.wholeSale!.costPrice,
+            createdAt: DateTime.now(),
+          ));
+        }
+      }
+    }
+
     MyCart cartData = MyCart(
-        note: ui.note,
-        sn: ui.sn,
-        qty: ui.qty,
-        amount: ui.amount.isEmpty ? ui.descAmount.toString() : ui.amount);
+        note: ui.note, sn: ui.sn, qty: totQty, amount: totAmount.toString());
+
+    // MyCart cartData = MyCart(
+    //     note: ui.note,
+    //     sn: ui.sn,
+    //     qty: ui.qty,
+    //     amount: ui.amount.isEmpty ? ui.descAmount.toString() : ui.amount);
 
     if (cartInfo.isEmpty) {
+      consoleLog("Empty draft");
       ProductDatum incoming = product;
+      // ProductDatum prod = incoming.copyWith(
+      //     qty: cartData.qty,
+      //     otherDetails: cartData.note,
+      //     newPrice: cartData.amount!,
+      //     serialNo: cartData.sn!);
       ProductDatum prod = incoming.copyWith(
           qty: cartData.qty,
+          attributes: finalSingleQty,
           otherDetails: cartData.note,
           newPrice: cartData.amount!,
-          serialNo: cartData.sn!);
+          serialNo: cartData.sn!,
+          shopProductWholesalePrices:
+              controller.sales.length > 1 ? wholePrices : null);
 
       var fullCart = await cartProvider.putInDraftCart(prod, id);
-    //  consoleLog(fullCart.toString());
+      //  consoleLog(fullCart.toString());
       await saveDraftOffline(fullCart);
       PageRouting.popToPage(context);
     } else {
+      consoleLog("Not Empty draft");
       ProductDatum incoming = product;
+      // ProductDatum prod = incoming.copyWith(
+      //     qty: cartData.qty!,
+      //     otherDetails: cartData.note,
+      //     newPrice: cartData.amount!,
+      //     serialNo: cartData.sn!);
       ProductDatum prod = incoming.copyWith(
           qty: cartData.qty!,
+          attributes: finalSingleQty,
           otherDetails: cartData.note,
           newPrice: cartData.amount!,
-          serialNo: cartData.sn!);
+          serialNo: cartData.sn!,
+          shopProductWholesalePrices:
+              controller.sales.length > 1 ? wholePrices : null);
 
       var fullCart = await cartProvider.replaceInDraft(prod, id);
-    //  consoleLog(fullCart.toString());
+      //  consoleLog(fullCart.toString());
       await saveDraftOffline(fullCart);
       PageRouting.popToPage(context);
     }
@@ -158,7 +235,7 @@ class CartController {
   ) async {
     CartProvider draft = Provider.of(context, listen: false);
     var fullCart = await draft.removeFromDraft(id);
-   // consoleLog(fullCart.toString());
+    // consoleLog(fullCart.toString());
     await saveDraftOffline(fullCart);
   }
 
@@ -172,7 +249,7 @@ class CartController {
     }
     CartProvider draft = Provider.of(context, listen: false);
     var data = await Database.read(Database.draftKey);
-  //  consoleLog(data.toString());
+    //  consoleLog(data.toString());
     var decode = await jsonDecode(jsonEncode(data));
     var existingData = DraftModel.fromJson(decode);
     draft.initializeDraft(existingData.data!);
@@ -202,20 +279,75 @@ class CartProvider extends ChangeNotifier {
     return data;
   }
 
-  Future replaceInCart(ProductDatum product) async {
-    for (var i = 0; i < cartProducts.length; i++) {
-      if (cartProducts[i].id == product.id) {
-        final int qty = product.qty! + cartProducts[i].qty!;
-        final String price =
-            "${double.tryParse(product.newPrice!)! + double.tryParse(cartProducts[i].newPrice!)!}";
-        ProductDatum prod = product.copyWith(
-          qty: qty,
-          newPrice: price,
-        );
-        cartProducts.removeAt(i);
-        cartProducts.insert(i, prod);
+  Future replaceInCart(ProductDatum product, [bool? isNew]) async {
+    List<ShopProductWholesalePrice> holdNewWholeSale = [];
+    int? attribute;
+    if (isNew == true) {
+      for (var i = 0; i < cartProducts.length; i++) {
+        if (cartProducts[i].id == product.id) {
+          cartProducts.removeAt(i);
+          cartProducts.insert(i, product);
+        }
+      }
+    } else {
+      for (var i = 0; i < cartProducts.length; i++) {
+        if (cartProducts[i].id == product.id) {
+          final int qty = product.qty! + cartProducts[i].qty!;
+          attribute = cartProducts[i].attributes + product.attributes;
+
+          final String price =
+              "${double.tryParse(product.newPrice!)! + double.tryParse(cartProducts[i].newPrice!)!}";
+
+          for (var x = 0;
+              x < cartProducts[i].shopProductWholesalePrices!.length;
+              x++) {
+            product.shopProductWholesalePrices!.forEach((val) {
+              if (val.id! == 0) {
+                attribute = cartProducts[i].attributes + product.attributes;
+              } else {
+                if (val.id ==
+                    cartProducts[i].shopProductWholesalePrices![x].id) {
+                  //log(" trying to sort out the wholesale  ${cartProducts[i].shopProductWholesalePrices![x].id} ${cartProducts[i].shopProductWholesalePrices![x].name}  ${val.id} ${val.name}");
+
+                  int? pricingQty = val.wholesaleQuantity! +
+                      cartProducts[i]
+                          .shopProductWholesalePrices![x]
+                          .wholesaleQuantity!;
+
+                  //          cartProducts[i]
+                  // .shopProductWholesalePrices!
+                  // .removeWhere((pricing) => pricing.id == val.id);
+
+                  cartProducts[i]
+                      .shopProductWholesalePrices!
+                      .where((pricing) => pricing.id == val.id)
+                      .toList()
+                      .first
+                      .wholesaleQuantity = pricingQty;
+                }
+              }
+            });
+          }
+
+          await Future.delayed(Duration(seconds: 1));
+          final List<ShopProductWholesalePrice> pricing = [
+            ...cartProducts[i].shopProductWholesalePrices!
+          ];
+
+          ProductDatum prod = product.copyWith(
+            qty: qty,
+            newPrice: price,
+            attributes: attribute ?? cartProducts[i].attributes,
+            shopProductWholesalePrices: pricing,
+          );
+          log(holdNewWholeSale.length.toString());
+          cartProducts.removeAt(i);
+          cartProducts.insert(i, prod);
+        }
       }
     }
+
+    holdNewWholeSale.clear();
 
     CartModel fullCart = CartModel(
       status: "",
@@ -309,25 +441,99 @@ class CartProvider extends ChangeNotifier {
   }
 
   Future replaceInDraft(ProductDatum product, String id) async {
+    int? attribute;
     for (var i = 0;
         i < draftList.where((element) => element.id == id).first.data!.length;
         i++) {
       if (draftList.where((element) => element.id == id).first.data![i].id ==
           product.id) {
-        final int qty = product.qty! +
-            draftList.where((element) => element.id == id).first.data![i].qty!;
+        final int qty = product
+            .qty!; // +  draftList.where((element) => element.id == id).first.data![i].qty!
+
         final String price =
-            "${double.tryParse(product.newPrice!)! + double.tryParse(draftList.where((element) => element.id == id).first.data![i].newPrice!)!}";
-        ProductDatum prod = product.copyWith(
-          qty: qty,
-          newPrice: price,
-        );
+            "${double.tryParse(product.newPrice!)!}"; //+ double.tryParse(draftList.where((element) => element.id == id).first.data![i].newPrice!)!
+
+        // for (var x = 0;
+        //     x <
+        //         draftList
+        //             .where((element) => element.id == id)
+        //             .first
+        //             .data![i]
+        //             .shopProductWholesalePrices!
+        //             .length;
+        //     x++) {
+        //   product.shopProductWholesalePrices!.forEach((val) {
+        //     if (val.id! == 0) {
+        //       consoleLog("Singe WAS EDITED");
+        //       attribute = draftList
+        //               .where((element) => element.id == id)
+        //               .first
+        //               .data![i]
+        //               .attributes +
+        //           product.attributes;
+        //     } else {
+        //       if (val.id ==
+        //           draftList
+        //               .where((element) => element.id == id)
+        //               .first
+        //               .data![i]
+        //               .shopProductWholesalePrices![x]
+        //               .id) {
+        //         consoleLog("multiple WAS EDITED");
+        //         //log(" trying to sort out the wholesale  ${cartProducts[i].shopProductWholesalePrices![x].id} ${cartProducts[i].shopProductWholesalePrices![x].name}  ${val.id} ${val.name}");
+
+        //         int? pricingQty = val.wholesaleQuantity! +
+        //             draftList
+        //                 .where((element) => element.id == id)
+        //                 .first
+        //                 .data![i]
+        //                 .shopProductWholesalePrices![x]
+        //                 .wholesaleQuantity!;
+
+        //         //          cartProducts[i]
+        //         // .shopProductWholesalePrices!
+        //         // .removeWhere((pricing) => pricing.id == val.id);
+
+        //         draftList
+        //             .where((element) => element.id == id)
+        //             .first
+        //             .data![i]
+        //             .shopProductWholesalePrices!
+        //             .where((pricing) => pricing.id == val.id)
+        //             .toList()
+        //             .first
+        //             .wholesaleQuantity = pricingQty;
+        //       }
+        //     }
+        //   });
+        // }
+
+        // await Future.delayed(Duration(seconds: 1));
+        // final List<ShopProductWholesalePrice> pricing = [
+        //   ...draftList
+        //       .where((element) => element.id == id)
+        //       .first
+        //       .data![i]
+        //       .shopProductWholesalePrices!
+        // ];
+
+        // ProductDatum prod = product.copyWith(
+        //   qty: qty,
+        //   newPrice: price,
+        //   attributes: attribute ??
+        //       draftList
+        //           .where((element) => element.id == id)
+        //           .first
+        //           .data![i]
+        //           .attributes,
+        //   //   shopProductWholesalePrices: pricing,
+        // );
         draftList.where((element) => element.id == id).first.data!.removeAt(i);
         draftList
             .where((element) => element.id == id)
             .first
             .data!
-            .insert(i, prod);
+            .insert(i, product);
       }
     }
 

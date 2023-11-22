@@ -10,6 +10,7 @@ import 'package:salesapp/services/api_url.dart';
 import 'package:salesapp/services/controllers/order_controller.dart';
 
 import '../../../../model/product_model.dart';
+import '../../../../services/controllers/new_operation.dart';
 import '../../../../services/controllers/product_controller.dart';
 import '../../../constant/colors.dart';
 import '../../../generalwidgets/loader.dart';
@@ -86,9 +87,11 @@ class ProdVerticalCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {
-        print(product.product!.productCategory!.name!);
-        showDiscription(context, product);
+      onTap: () async {
+        await WholeSaleOperation.removeAndAddWholeSale(
+            context, product.shopProductWholesalePrices, product);
+        // print(product.product!.productCategory!.name!);
+        showDiscription(context, product, true);
       },
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -98,21 +101,17 @@ class ProdVerticalCard extends StatelessWidget {
               Container(
                 height: 80,
                 width: 80,
+                clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
                   border: Border.all(color: HexColor("#DFE5F3")),
                   borderRadius: BorderRadius.circular(9.5),
                 ),
-                child: OverflowBox(
-                  minWidth: 70,
-                  minHeight: 0.0,
-                  maxWidth: double.infinity,
-                  child: CachedNetworkImage(
-                    imageUrl: product.productUnit!.photo ?? "",
-                    progressIndicatorBuilder:
-                        (context, url, downloadProgress) =>
-                            const Center(child: Loader()),
-                    errorWidget: (context, url, error) => Icon(Icons.error),
-                  ),
+                child: CachedNetworkImage(
+                  imageUrl: product.productUnit!.photo ?? "",
+                  fit: BoxFit.cover,
+                  progressIndicatorBuilder: (context, url, downloadProgress) =>
+                      const Center(child: Loader()),
+                  errorWidget: (context, url, error) => Icon(Icons.error),
                 ),
               ),
               const SizedBox(

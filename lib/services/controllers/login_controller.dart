@@ -42,7 +42,7 @@ class LoginController {
       CartController.getDraftInitData(context);
       OrderController.getOrderInitData(context);
       pref.setBool(TempStore.isLoggedInKey, true);
-      PageRouting.pushToPage(context, const HomeScreen());
+      PageRouting.removeAllToPage(context, const HomeScreen());
 
       //    log(existingData.data!.user!.username.toString());
     } else {

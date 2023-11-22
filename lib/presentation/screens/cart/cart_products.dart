@@ -7,6 +7,7 @@ import 'package:salesapp/presentation/screens/description/description.dart';
 
 import '../../../model/product_model.dart';
 import '../../../services/controllers/cart_controller.dart';
+import '../../../services/controllers/product_controller.dart';
 import '../../constant/colors.dart';
 import '../../generalwidgets/loader.dart';
 import '../../generalwidgets/text.dart';
@@ -40,8 +41,33 @@ class CartCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     CartProvider action = Provider.of<CartProvider>(context, listen: false);
+    ProductProvider prod = context.watch<ProductProvider>();
+    int all = 0;
+    int? fixedQty = product.qty;
+    //  int singleQty = 0;
+    if (product.shopProductWholesalePrices != null) {
+      for (var element in product.shopProductWholesalePrices!) {
+        if (element.id != 0) {
+          all += (element.wholesaleQuantity!);
+        }
+        print(element.initialQty);
+      }
+
+      //   singleQty = (fixedQty! - all);
+    }
+
     return InkWell(
-      onTap: () => showDiscription(context, product),
+      onTap: () async {
+        final getProForEdit = prod.shopProduct
+            .where((element) => element.id == product.id)
+            .toList();
+
+        if (getProForEdit.isNotEmpty) {
+          ProductDatum data = getProForEdit.first.copyWith(
+              stockCount: getProForEdit.first.stockCount! - product.qty!);
+          showDiscription(context, data, false);
+        }
+      },
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -50,22 +76,18 @@ class CartCard extends StatelessWidget {
               Container(
                 height: 80,
                 width: 80,
+                clipBehavior: Clip.antiAlias, // add this
+
                 decoration: BoxDecoration(
                   border: Border.all(color: HexColor("#DFE5F3")),
                   borderRadius: BorderRadius.circular(9.5),
                 ),
-                child: OverflowBox(
-                  minWidth: 70,
-                  minHeight: 0.0,
-                  maxWidth: double.infinity,
-                  child: CachedNetworkImage(
-                    imageUrl: product.productUnit!.photo ??
-                        "",
-                    progressIndicatorBuilder:
-                        (context, url, downloadProgress) =>
-                            const Center(child: Loader()),
-                    errorWidget: (context, url, error) => Icon(Icons.error),
-                  ),
+                child: CachedNetworkImage(
+                  imageUrl: product.productUnit!.photo ?? "",
+                  fit: BoxFit.cover,
+                  progressIndicatorBuilder: (context, url, downloadProgress) =>
+                      const Center(child: Loader()),
+                  errorWidget: (context, url, error) => Icon(Icons.error),
                 ),
               ),
               const SizedBox(
@@ -95,6 +117,68 @@ class CartCard extends StatelessWidget {
                     align: TextAlign.left,
                     fontWeight: FontWeight.w700,
                   ),
+                  SizedBox(
+                    height: 40,
+                    width: MediaQuery.of(context).size.width * 0.6,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          product.attributes == 0 || product.attributes == null
+                              ? SizedBox.shrink()
+                              : Padding(
+                                  padding: const EdgeInsets.only(right: 5),
+                                  child: Container(
+                                    height: 20,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.withOpacity(.2),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Center(
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 5),
+                                        child: AppText(
+                                          text:
+                                              "Single  X${product.attributes}",
+                                          size: 10,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                          ...product.shopProductWholesalePrices!.map(
+                            (e) => e.wholesaleQuantity == 0 ||
+                                    e.wholesaleQuantity == null
+                                ? SizedBox.shrink()
+                                : Padding(
+                                    padding: const EdgeInsets.only(right: 5),
+                                    child: Container(
+                                      height: 20,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.withOpacity(.2),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Center(
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 5),
+                                          child: AppText(
+                                            text:
+                                                "${e.name}  X${e.wholesaleQuantity}",
+                                            size: 10,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                          )
+                        ],
+                      ),
+                    ),
+                  )
                 ],
               ),
             ],

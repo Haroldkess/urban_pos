@@ -15,8 +15,8 @@ currencySymbol() {
   return format.currencySymbol;
 }
 
-convertToCurrency(String e) {
-  String newStr = e.replaceAllMapped(
+convertToCurrency( e) {
+  String newStr = e.toString().replaceAllMapped(
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => "${m[0]},");
   return newStr;
 }

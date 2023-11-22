@@ -8,6 +8,8 @@ import 'package:salesapp/presentation/screens/description/description.dart';
 
 import '../../../../model/product_model.dart';
 import '../../../../services/controllers/cart_controller.dart';
+import '../../../../services/controllers/product_controller.dart';
+import '../../../constant/colors.dart';
 import '../../../generalwidgets/loader.dart';
 import '../../../generalwidgets/text.dart';
 
@@ -48,8 +50,21 @@ class DraftCartCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     CartProvider action = Provider.of<CartProvider>(context, listen: false);
+    ProductProvider prod = context.watch<ProductProvider>();
     return InkWell(
-      onTap: () => showDiscription(context, product, true, id),
+      onTap: () {
+        final getProForEdit = prod.shopProduct
+            .where((element) => element.id == product.id)
+            .toList();
+
+        if (getProForEdit.isNotEmpty) {
+          ProductDatum data = getProForEdit.first.copyWith(
+              stockCount: getProForEdit.first.stockCount! - product.qty!);
+
+          showDiscription(context, data, false, true, id);
+        }
+        //   showDiscription(context, product, true, id);
+      },
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -58,15 +73,17 @@ class DraftCartCard extends StatelessWidget {
               Container(
                 height: 80,
                 width: 80,
+                clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
                   border: Border.all(color: HexColor("#DFE5F3")),
                   borderRadius: BorderRadius.circular(9.5),
                 ),
-                child: OverflowBox(
-                  minWidth: 70,
-                  minHeight: 0.0,
-                  maxWidth: double.infinity,
-                  child: CachedNetworkImage(
+                child: CachedNetworkImage(
+                  imageUrl: product.product!.photo ?? "",
+                  fit: BoxFit.cover,
+                  progressIndicatorBuilder: (context, url, downloadProgress) =>
+                      const Center(child: Loader()),
+                  errorWidget: (context, url, error) => CachedNetworkImage(
                     imageUrl: product.product!.photo ?? "",
                     progressIndicatorBuilder:
                         (context, url, downloadProgress) =>
@@ -96,11 +113,73 @@ class DraftCartCard extends StatelessWidget {
                     height: 8.0,
                   ),
                   AppText(
-                    text: product.newPrice!.toString(),
+                    text: "₦${convertToCurrency(product.newPrice!.toString())}",
                     color: HexColor("#1D2939"),
                     size: 14,
                     align: TextAlign.left,
                     fontWeight: FontWeight.w700,
+                  ),
+                  SizedBox(
+                    height: 40,
+                    width: MediaQuery.of(context).size.width * 0.6,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          product.attributes == 0 || product.attributes == null
+                              ? SizedBox.shrink()
+                              : Padding(
+                                  padding: const EdgeInsets.only(right: 5),
+                                  child: Container(
+                                    height: 20,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.withOpacity(.2),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Center(
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 5),
+                                        child: AppText(
+                                          text:
+                                              "Single  X${product.attributes}",
+                                          size: 10,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                          ...product.shopProductWholesalePrices!.map(
+                            (e) => e.wholesaleQuantity == 0 ||
+                                    e.wholesaleQuantity == null
+                                ? SizedBox.shrink()
+                                : Padding(
+                                    padding: const EdgeInsets.only(right: 5),
+                                    child: Container(
+                                      height: 20,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.withOpacity(.2),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Center(
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 5),
+                                          child: AppText(
+                                            text:
+                                                "${e.name}  X${e.wholesaleQuantity}",
+                                            size: 10,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                          )
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),

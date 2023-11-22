@@ -1,17 +1,17 @@
 // ignore_for_file: use_build_context_synchronously
-
 import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
+import 'package:number_to_words_english/number_to_words_english.dart';
+import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 import 'package:salesapp/presentation/generalwidgets/no_barcode.dart';
+import 'package:salesapp/presentation/uimodels/desription_model.dart';
 import 'package:salesapp/presentation/uiproviders/ui_provider.dart';
 import 'package:salesapp/services/controllers/product_controller.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../../model/product_model.dart';
 import '../../presentation/constant/colors.dart';
 import '../../presentation/functions/allNavigation.dart';
@@ -66,7 +66,7 @@ class Operations {
           noBarcodeFound(context,
               "Can't find this Product. Try another barcode", "Not Found", red);
         } else {
-          await showDiscription(context, findProduct.first);
+          await showDiscription(context, findProduct.first, true);
         }
 
         //FocusScope.of(context).dispose();
@@ -177,6 +177,8 @@ class Operations {
       [bool? isOrder, String? paid]) async {
     OrderProvider prod = Provider.of<OrderProvider>(context, listen: false);
     LoginProvider userData = Provider.of<LoginProvider>(context, listen: false);
+    final img = await networkImage(userData.shopModel.data!.shop!.logo ??
+        "https://pbs.twimg.com/profile_images/1583237430718697472/58HiJ5OO_400x400.jpg");
 
     // ShopSettingsModel shop =
     //     Provider.of<ShopSettingsModel>(context, listen: false);
@@ -184,9 +186,10 @@ class Operations {
     final dueDate = date.add(Duration(days: 7));
 
     final invoice = Invoice(
+        image: img,
         supplier: Supplier(
           name: name,
-          address: '',
+          address: userData.shopModel.data!.shop!.address,
           paymentInfo: satus,
         ),
         customer: Customer(
@@ -216,10 +219,16 @@ class Operations {
                   content: "IMEI: "),
             )
             .toList(),
+        totalAmountInWords: NumberToWordsEnglish.convert((amount).toInt()),
+        amountTendered:
+            "N${convertToCurrency((double.tryParse(bank)! + double.tryParse(pos)! + double.tryParse(cash)!).toString())}",
+        cash: "N$cash",
+        pos: "N$pos",
         subTotal: "N${convertToCurrency(amount.toString())}",
-        bank: isOrder == true
-            ? "N${convertToCurrency(paid!)}"
-            : "N${convertToCurrency((double.tryParse(bank)! + double.tryParse(pos)! + double.tryParse(cash)!).toString())}",
+        bank: "N$bank",
+        // bank: isOrder == true
+        //     ? "N${convertToCurrency(paid!)}"
+        //     : "N${convertToCurrency((double.tryParse(bank)! + double.tryParse(pos)! + double.tryParse(cash)!).toString())}",
         change: (amount -
                     double.tryParse(bank)! -
                     double.tryParse(pos)! -
@@ -250,6 +259,8 @@ class Operations {
 
     OrderProvider prod = Provider.of<OrderProvider>(context, listen: false);
     LoginProvider userData = Provider.of<LoginProvider>(context, listen: false);
+    final img = await networkImage(userData.shopModel.data!.shop!.logo ??
+        "https://pbs.twimg.com/profile_images/1583237430718697472/58HiJ5OO_400x400.jpg");
 
     // ShopSettingsModel shop =
     //     Provider.of<ShopSettingsModel>(context, listen: false);
@@ -257,13 +268,14 @@ class Operations {
     final invoice = Invoice(
         supplier: Supplier(
           name: name,
-          address: '',
+          address: userData.shopModel.data!.shop!.address,
           paymentInfo: satus,
         ),
         customer: Customer(
           name: name,
           address: "",
         ),
+        image: img,
         info: InvoiceInfo(
           name: userData.shopModel.data!.user!.firstName ?? "Ogaboss",
           date: date,
@@ -287,10 +299,16 @@ class Operations {
                   content: "IMEI: "),
             )
             .toList(),
+        totalAmountInWords: NumberToWordsEnglish.convert((amount).toInt()),
+        amountTendered:
+            "N${convertToCurrency((double.tryParse(bank)! + double.tryParse(pos)! + double.tryParse(cash)!).toString())}",
+        cash: "N$cash",
+        pos: "N$pos",
         subTotal: "N${convertToCurrency(amount.toString())}",
-        bank: isOrder == true
-            ? "N${convertToCurrency(paid!)}"
-            : "N${convertToCurrency((double.tryParse(bank)! + double.tryParse(pos)! + double.tryParse(cash)!).toString())}",
+        bank: "N$bank",
+        // bank: isOrder == true
+        //     ? "N${convertToCurrency(paid!)}"
+        //     : "N${convertToCurrency((double.tryParse(bank)! + double.tryParse(pos)! + double.tryParse(cash)!).toString())}",
         change: (amount -
                     double.tryParse(bank)! -
                     double.tryParse(pos)! -

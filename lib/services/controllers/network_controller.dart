@@ -10,12 +10,15 @@ import 'package:overlay_support/overlay_support.dart';
 import 'package:salesapp/presentation/constant/colors.dart';
 import 'package:salesapp/presentation/generalwidgets/text.dart';
 
+import '../api_url.dart';
+import 'order_controller.dart';
+
 Map _source = {ConnectivityResult.none: false};
 final NetworkConnectivity _networkConnectivity = NetworkConnectivity.instance;
 String string = '';
 
 class CheckConnect {
-  static Future networkCheck([bool? upload]) async {
+  static Future networkCheck([bool? upload, dynamic context]) async {
     bool? isOnce;
     _networkConnectivity.initialise();
     _networkConnectivity.myStream.listen((source) async {
@@ -77,7 +80,9 @@ class CheckConnect {
               );
             }
           } else {
-         //   consoleLog("Since network is available we will upload all orders to server");
+            consoleLog(
+                "Since network is available we will upload all orders to server");
+            OrderController.atemptLogin(context);
           }
         } else {
           if (upload == false) {
@@ -167,7 +172,7 @@ class NetworkConnectivity {
     ConnectivityResult result = await _networkConnectivity.checkConnectivity();
     _checkStatus(result);
     _networkConnectivity.onConnectivityChanged.listen((result) {
-    //  print(result);
+      //  print(result);
       _checkStatus(result);
     });
   }

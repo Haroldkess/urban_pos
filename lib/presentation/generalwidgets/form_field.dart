@@ -26,6 +26,8 @@ class AppFormField extends StatelessWidget {
   bool? isEnabled;
   FocusNode? focus;
   bool? autoFocus;
+  int? id;
+
   AppFormField(
       {Key? key,
       this.autoFocus,
@@ -43,7 +45,8 @@ class AppFormField extends StatelessWidget {
       this.isNumber,
       this.width,
       this.tap,
-      this.isEnabled})
+      this.isEnabled,
+      this.id})
       : super(key: key);
 
   @override
@@ -84,6 +87,13 @@ class AppFormField extends StatelessWidget {
                     Operations.addSnCart(context, value);
                   } else if (action == "amount") {
                     Operations.addAmountCart(context, value);
+                    if (id != null) {
+                      if (value.isNotEmpty) {
+                        DescriprionController.instance.updatePrice(id, value);
+                      } else {
+                        DescriprionController.instance.updatePrice(id, "0");
+                      }
+                    }
                   }
                 }
               },
@@ -95,7 +105,7 @@ class AppFormField extends StatelessWidget {
                       FilteringTextInputFormatter.deny(RegExp("[-,' ',',']"))
                     ]
                   : null,
-                  autofocus: autoFocus ?? false,
+              autofocus: autoFocus ?? false,
               onSaved: (input) {},
               decoration: InputDecoration(
                 hintText: "   $hint",

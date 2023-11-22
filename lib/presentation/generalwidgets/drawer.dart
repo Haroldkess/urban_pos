@@ -15,6 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../main.dart';
 import '../../services/controllers/operations.dart';
+import '../../services/controllers/order_controller.dart';
 
 class DrawerSide extends StatefulWidget {
   final GlobalKey<ScaffoldState> scafKey;
@@ -62,7 +63,8 @@ class _DrawerSideState extends State<DrawerSide> {
                               constraints: const BoxConstraints(maxWidth: 150),
                               child: AppText(
                                 text: user.shopModel.data!.user!.username ??
-                                    "Username",
+                                    user.shopModel.data!.shop!.name ??
+                                    "username",
                                 color: HexColor("#475467"),
                                 fontWeight: FontWeight.w600,
                                 size: 16,
@@ -111,6 +113,7 @@ class _DrawerSideState extends State<DrawerSide> {
               ListTile(
                 onTap: () => {
                   Operations.cleaarSearch(context),
+                  OrderController.getOrderInitData(context),
                   PageRouting.removePreviousToPage(context, const OrderScreen())
                 },
                 title: AppText(

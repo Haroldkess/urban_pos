@@ -10,6 +10,8 @@ import 'package:salesapp/presentation/screens/home/category_view/category_slide.
 import 'package:salesapp/presentation/screens/home/product_views/grid_views.dart';
 import 'package:salesapp/presentation/screens/home/product_views/vertical_views.dart';
 import 'package:salesapp/presentation/uiproviders/ui_provider.dart';
+import 'package:salesapp/services/api_url.dart';
+import 'package:salesapp/services/controllers/network_controller.dart';
 import 'package:salesapp/services/controllers/operations.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -19,7 +21,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final GlobalKey<ScaffoldState> key = GlobalKey();
   @override
   Widget build(BuildContext context) {
@@ -51,5 +53,59 @@ class _HomeScreenState extends State<HomeScreen> {
       showMenu: false,
       showFooter: false,
     );
+  }
+
+  @override
+  void initState() {
+    WidgetsBinding.instance.addObserver(this);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    // if (state == AppLifecycleState.inactive) return;
+
+    final isBackground = state == AppLifecycleState.paused;
+    final isClosed = state == AppLifecycleState.detached;
+    final isResumed = state == AppLifecycleState.resumed;
+    final isInactive = state == AppLifecycleState.inactive;
+
+    if (isBackground) {
+      consoleLog("background");
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        CheckConnect.networkCheck(true, context);
+      });
+    } else if (isClosed) {
+      consoleLog("closed");
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        CheckConnect.networkCheck(true, context);
+      });
+    } else if (isResumed) {
+      consoleLog("resumed");
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        CheckConnect.networkCheck(true, context);
+      });
+    } else if (isInactive) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        CheckConnect.networkCheck(true, context);
+      });
+      consoleLog("inactive");
+    }
+
+    /* if (isBackground) {
+      // service.stop();
+    }
+    
+     else {
+      // service.start();
+    }*/
   }
 }

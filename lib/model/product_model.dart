@@ -65,10 +65,10 @@ class ProductDatum {
   String? serialNo;
   String? newPrice;
   int? qty;
+  int? singleQty;
   // String? soldBy;
   // String? orderNo;
   // String? status;
-  
 
   ProductDatum(
       {this.id,
@@ -92,7 +92,8 @@ class ProductDatum {
       this.shopProductSerialNos,
       this.serialNo,
       this.newPrice,
-      this.qty});
+      this.qty,
+      this.singleQty});
 
   ProductDatum copyWith({
     dynamic id,
@@ -117,6 +118,7 @@ class ProductDatum {
     String? serialNo,
     String? newPrice,
     int? qty,
+    int? singleQty,
   }) =>
       ProductDatum(
           id: id ?? this.id,
@@ -142,7 +144,8 @@ class ProductDatum {
               shopProductSerialNos ?? this.shopProductSerialNos,
           serialNo: serialNo ?? this.serialNo,
           newPrice: newPrice ?? this.newPrice,
-          qty: qty ?? this.qty);
+          qty: qty ?? this.qty,
+          singleQty: qty ?? this.singleQty);
 
   factory ProductDatum.fromJson(Map<String, dynamic> json) => ProductDatum(
         id: json["id"],
@@ -184,6 +187,7 @@ class ProductDatum {
         serialNo: json["serialNo"],
         newPrice: json["newPrice"],
         qty: json["qty"],
+        singleQty: json["singleQty"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -214,6 +218,7 @@ class ProductDatum {
         "serialNo": serialNo,
         "newPrice": newPrice,
         "qty": qty,
+        "singleQty": singleQty,
       };
 }
 
@@ -415,26 +420,54 @@ class ShopProductWholesalePrice {
   int? id;
   int? shopProductId;
   int? userId;
-  int? price;
+  dynamic price;
   int? wholesaleQuantity;
+  int? initialQty;
   DateTime? createdAt;
   DateTime? updatedAt;
   String? name;
-  int? costPrice;
+  dynamic costPrice;
   dynamic deletedAt;
 
-  ShopProductWholesalePrice({
-    this.id,
-    this.shopProductId,
-    this.userId,
-    this.price,
-    this.wholesaleQuantity,
-    this.createdAt,
-    this.updatedAt,
-    this.name,
-    this.costPrice,
-    this.deletedAt,
-  });
+  ShopProductWholesalePrice(
+      {this.id,
+      this.shopProductId,
+      this.userId,
+      this.price,
+      this.wholesaleQuantity,
+      this.createdAt,
+      this.updatedAt,
+      this.name,
+      this.costPrice,
+      this.deletedAt,
+      this.initialQty});
+
+  ShopProductWholesalePrice copyWith({
+    int? id,
+    int? shopProductId,
+    int? userId,
+    dynamic price,
+    int? wholesaleQuantity,
+    int? initialQty,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    String? name,
+    dynamic costPrice,
+    dynamic deletedAt,
+  }) =>
+      ShopProductWholesalePrice(
+        id: id ?? this.id,
+        shopProductId: shopProductId ?? this.shopProductId,
+        userId: userId ?? this.userId,
+        price: price ?? this.price,
+        wholesaleQuantity: wholesaleQuantity ?? this.wholesaleQuantity,
+        initialQty: initialQty ?? this.initialQty,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        name: name ?? this.name,
+        costPrice: costPrice ?? this.costPrice,
+        deletedAt: deletedAt ?? this.deletedAt,
+      );
 
   factory ShopProductWholesalePrice.fromJson(Map<String, dynamic> json) =>
       ShopProductWholesalePrice(
@@ -443,6 +476,7 @@ class ShopProductWholesalePrice {
         userId: json["user_id"],
         price: json["price"],
         wholesaleQuantity: json["wholesale_quantity"],
+        initialQty: json["initialQty"],
         createdAt: json["created_at"] == null
             ? null
             : DateTime.parse(json["created_at"]),
@@ -460,6 +494,7 @@ class ShopProductWholesalePrice {
         "user_id": userId,
         "price": price,
         "wholesale_quantity": wholesaleQuantity,
+        "initialQty": initialQty,
         "created_at": createdAt?.toIso8601String(),
         "updated_at": updatedAt?.toIso8601String(),
         "name": name,

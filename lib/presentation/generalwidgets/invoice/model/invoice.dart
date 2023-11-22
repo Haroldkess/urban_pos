@@ -12,20 +12,28 @@ class Invoice {
   final String total;
   final String bank;
   final String change;
+  final String cash;
+  final String amountTendered;
   final String remain;
+  final String pos;
+  final dynamic image;
+  final String? totalAmountInWords;
 
-  const Invoice({
-    required this.info,
-    required this.supplier,
-    required this.customer,
-    required this.items,
-    required this.subTotal,
-    required this.vat,
-    required this.bank,
-    required this.total,
-    required this.change,
-    required this.remain
-  });
+  const Invoice(
+      {required this.info,
+      required this.supplier,
+      required this.customer,
+      required this.items,
+      required this.subTotal,
+      required this.vat,
+      required this.bank,
+      required this.total,
+      required this.change,
+      required this.cash,
+      required this.amountTendered,
+      required this.pos,
+      required this.remain,
+      required this.image, required this.totalAmountInWords});
 }
 
 class InvoiceInfo {

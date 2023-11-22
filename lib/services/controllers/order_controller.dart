@@ -61,6 +61,26 @@ class OrderController {
       totCost += element.costPrice;
       totQty += element.qty!;
       totPrice += double.tryParse(element.newPrice!)!;
+      List<OrderProductWholesalePrice> finalWholePrice = [];
+
+      if (element.shopProductWholesalePrices!.isNotEmpty) {
+        for (var val in element.shopProductWholesalePrices!) {
+          OrderProductWholesalePrice wholePrice = OrderProductWholesalePrice(
+            id: val.id,
+            shopProductId: val.shopProductId,
+            userId: val.userId,
+            price: val.price,
+            wholesaleQuantity: val.wholesaleQuantity,
+            createdAt: val.createdAt,
+            updatedAt: val.updatedAt,
+            name: val.name,
+            costPrice: val.costPrice,
+            deletedAt: val.deletedAt,
+          );
+          finalWholePrice.add(wholePrice);
+        }
+      }
+
       CartItem item = CartItem(
           shopProductId: element.productId,
           price: element.newPrice!,
@@ -70,6 +90,7 @@ class OrderController {
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
           costPrice: element.costPrice,
+          shopProductWholesalePrices: finalWholePrice,
           shopProduct:
               ShopProduct(product: OrderProduct(name: element.product!.name)));
       cartItems.add(item);
@@ -156,6 +177,7 @@ class OrderController {
       consoleLog(e.toString());
     }
     //   consoleLog(fullCart.toString());
+
     await saveOrderOffline(fullCart);
     CartController.deleteAll(context);
     // PageRouting.popToPage(context);
@@ -320,6 +342,20 @@ class OrderController {
     }
   }
 
+  static Future addPaymentOption(context, Payment payment, String id) async {
+    OrderProvider orderProvider =
+        Provider.of<OrderProvider>(context, listen: false);
+    var fullCart = await orderProvider.addPayment(payment, id);
+    await saveOrderOffline(fullCart);
+  }
+
+  static Future deleteAndSaveOrderPayment(context, int id, orderId) async {
+    OrderProvider orderProvider = Provider.of(context, listen: false);
+    var fullOrder = await orderProvider.removePayment(orderId, id);
+    //  consoleLog(fullOrder.toString());
+    await saveOrderOffline(fullOrder);
+  }
+
   static Future saveOrderOffline(jsonData) =>
       Database.create(Database.ordersKey, jsonData);
 
@@ -338,7 +374,7 @@ class OrderController {
 
   static Future<void> syncOrder([context]) async {
     UiProvider uiProvider = Provider.of<UiProvider>(context, listen: false);
-    LoginProvider login = Provider.of(context, listen: false);
+    // LoginProvider login = Provider.of(context, listen: false);
     ProductProvider product = Provider.of(context, listen: false);
     uiProvider.loadOrderUpload(true);
 
@@ -423,7 +459,7 @@ class OrderController {
         pref.setBool(TempStore.orderSentKey, true);
         await ProductController.syncProd(context);
       } else {
-        await deleteAllAndSaveOrderItem();
+        await deleteAllAndSaveOrderItem(null);
         pref.setBool(TempStore.orderSentKey, true);
       }
 
@@ -495,7 +531,7 @@ class OrderController {
       pref.setBool(TempStore.isLoggedInKey, true);
       //  log(existingData.data!.token!);
       await makeRequest(existingData.data!.token,
-          existingData.data!.shop!.id.toString(), context ?? context);
+          existingData.data!.shop!.id.toString(), context);
     } else {}
   }
 }
@@ -509,6 +545,67 @@ class OrderProvider extends ChangeNotifier {
     orderSearch = name;
 
     notifyListeners();
+  }
+
+  Future addPayment(Payment payment, String id) async {
+    var amount = 0.0;
+    orders
+        .where((element) => element.id.toString() == id)
+        .first
+        .payments!
+        .add(payment);
+
+    await Future.forEach(
+        orders.where((element) => element.id.toString() == id).first.payments!,
+        (element) => amount += element.amount ?? 0);
+
+    orders.where((element) => element.id.toString() == id).first.amountPaid =
+        amount;
+    OrderModel fullCart = OrderModel(
+      status: "success",
+      data: Data(data: orders),
+    );
+    orderModel = fullCart;
+    var data = jsonDecode(jsonEncode(orderModel.toJson()));
+
+    notifyListeners();
+    return data;
+  }
+
+  Future removePayment(orderId, id) async {
+    var amount = 0.0;
+    orders
+        .where((element) => element.id.toString() == orderId.toString())
+        .first
+        .payments!
+        .removeWhere((element) => element.id.toString() == id.toString());
+    List lister = orders
+        .where((element) => element.id.toString() == orderId.toString())
+        .first
+        .payments!
+        .toList();
+    if (lister.isNotEmpty) {
+      await Future.forEach(
+          orders
+              .where((element) => element.id.toString() == orderId.toString())
+              .first
+              .payments!,
+          (element) => amount += element.amount ?? 0);
+    }
+
+    orders
+        .where((element) => element.id.toString() == orderId.toString())
+        .first
+        .amountPaid = amount;
+    OrderModel fullCart = OrderModel(
+      status: "success",
+      data: Data(data: orders),
+    );
+    orderModel = fullCart;
+    var data = jsonDecode(jsonEncode(orderModel.toJson()));
+
+    notifyListeners();
+    return data;
   }
 
   Future putInOrder(OrdersData product) async {

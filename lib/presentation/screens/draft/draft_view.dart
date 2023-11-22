@@ -171,7 +171,6 @@ class _DraftViewState extends State<DraftView> {
                   ],
                 ),
              
-             
                 Padding(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 7, vertical: 10),

@@ -528,7 +528,7 @@ class ShopProductWholesalePrice {
   int? id;
   int? shopProductId;
   int? userId;
-  int? price;
+  dynamic price;
   int? wholesaleQuantity;
   DateTime? createdAt;
   DateTime? updatedAt;

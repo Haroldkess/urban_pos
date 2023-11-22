@@ -60,7 +60,7 @@ class ProdGridCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => showDiscription(context, product),
+      onTap: () => showDiscription(context, product, true),
       child: Container(
         width: 173,
         height: 273,

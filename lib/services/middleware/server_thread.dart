@@ -1,3 +1,4 @@
+import 'package:flutter/scheduler.dart';
 import 'package:salesapp/services/controllers/order_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
@@ -10,12 +11,10 @@ SharedPreferences? pref;
 
 //initialize the workmanager for uploading order
 initSyncWorker() async {
-  await Workmanager()
-      .initialize(callbackDispatcher, isInDebugMode: false);
-  await Workmanager()
-      .registerPeriodicTask(taskName, taskName,
-          frequency: const Duration(minutes: 15),
-          constraints: Constraints(networkType: NetworkType.connected));
+  await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
+  await Workmanager().registerPeriodicTask(taskName, taskName,
+      frequency: const Duration(minutes: 15),
+      constraints: Constraints(networkType: NetworkType.connected));
 }
 
 // call dispatcher to triger the order upload function
@@ -27,6 +26,7 @@ callbackDispatcher() {
 }
 
 orderUpload() {
- // print("Since network is available we will upload all orders to server");
-  OrderController.atemptLogin();
+//  print("Since network is available we will upload all orders to server");
+
+  OrderController.atemptLogin(null);
 }
